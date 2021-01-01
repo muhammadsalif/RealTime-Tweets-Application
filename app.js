@@ -25,7 +25,7 @@ app.get("/", (req, res) => {
     res.status(200).send({
         message: "Welcome to server"
     })
-    console.log("Hello to server")
+    console.log("Welcome to server")
     io.on('connection', (socket) => {
         console.log("Socket is connected with id : ", socket.id)
         res.send({
