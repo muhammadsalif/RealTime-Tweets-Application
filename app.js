@@ -4,7 +4,7 @@ const http = require("http");
 const app = express()
 const socketIO = require('socket.io');
 
-const PORT = process.env.PORT || 5000;
+const port = process.env.PORT || 5000;
 
 app.use(bodyParser.json());
 
@@ -42,7 +42,7 @@ app.post("/tweet", (req, res) => {
 
 
 
-server.listen(PORT, () => {
+server.listen(port, () => {
     console.log(`Server is listening to port ${PORT}`)
 })
 
