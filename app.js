@@ -72,19 +72,6 @@ const io = socketIO(server, {
     },
 })
 
-app.get("/", (req, res) => {
-    res.status(200).send({
-        message: "Welcome to server"
-    })
-    console.log("Welcome to server")
-    io.on('connection', (socket) => {
-        console.log("Socket is connected with id : ", socket.id)
-        res.send({
-            message: "You are connected to server"
-        })
-    })
-})
-
 app.post("/signup", (req, res) => {
     if (!req.body || !req.body.email || !req.body.userName || !req.body.password) {
         res.status(403).send(`
@@ -171,6 +158,12 @@ app.post("/login", (req, res) => {
                             token: tokenData
                         })
                         console.log(req.body.email, "Login successfully");
+                        io.on('connection', (socket) => {
+                            console.log("Socket is connected with id : ", socket.id)
+                            res.send({
+                                message: "Socket connected"
+                            })
+                        })
                     } else {
                         res.status(403).send({
                             message: "Password is incorrect"
@@ -266,6 +259,7 @@ app.post("/tweet", (req, res) => {
                     res.status(500).send({ message: "Tweets posting error try again later" })
                 }
             })
+            io.emit("NEW_TWEET", tweets.find({}))
         }
         if (!user) {
             console.log("User not find")
@@ -280,7 +274,7 @@ app.post("/tweet", (req, res) => {
 
 app.get("/tweets", (req, res) => {
     tweets.find({}, (err, success) => {
-        if (success) res.status(200).send(success )
+        if (success) res.status(200).send(success)
         else if (err) {
             console.log("Internal Error");
             res.status(500).send({ message: "Internal Error" })
