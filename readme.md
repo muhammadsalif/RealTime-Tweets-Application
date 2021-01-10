@@ -1,1 +1,0 @@
-if i change schema it is not applying 
