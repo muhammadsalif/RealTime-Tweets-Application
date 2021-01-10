@@ -9,13 +9,13 @@ const jwt = require('jsonwebtoken');
 
 const SERVER_SECRET = process.env.SECRET || "1234";
 
-
 const port = process.env.PORT || 5000;
 
 app.use(bodyParser.json());
 /////////////////////////////////////////////////////////////////////////
 // Mongoose connections
 let dbURI = "mongodb+srv://dbuser:dbpassword@cluster0.lxign.mongodb.net/tweetsdatabase?retryWrites=true&w=majority"
+
 mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true });
 
 mongoose.connection.on("connected", () => {
@@ -50,11 +50,8 @@ var userSchema = new mongoose.Schema({
 var users = mongoose.model("users", userSchema);
 
 var tweetsSchema = mongoose.Schema({
-    tweet: {
-        type: String,
-        // required: true,
-        // unique: true,
-    },
+    tweet: { type: String, },
+    userName: { type: String, },
 })
 var tweets = mongoose.model("tweets", tweetsSchema);
 
@@ -201,22 +198,6 @@ app.post("/login", (req, res) => {
     })
 })
 
-// app.post("tweets", (req, res) => {
-//     if (!req.body || !req.headers.token || !req.headers.token) {
-//         res.status(400).send(`
-//         please provide token in json body.
-//         e.g:
-//         {
-//             "token": "Mark",
-//         }`)
-//         return;
-//     }
-
-//     sessions.findOne({ })
-//     tweets.create({
-//         tweet: req.body.tweet
-//     })
-// })
 app.get("/dashboard", (req, res) => {
     if (!req.headers.token) {
         res.status(400).send(`
@@ -256,6 +237,29 @@ app.get("/dashboard", (req, res) => {
             })
             console.log("Internal Server Error")
         }
+    })
+})
+
+app.post("tweet", (req, res) => {
+    if (!req.body.tweet || !req.body.userName) {
+        res.status(449).send({
+            message: "Tweet is missing"
+        })
+        return;
+    }
+    tweets.create({
+        userName: req.body.userName,
+        tweet: req.body.tweet
+    }, (err, success) => {
+        if (err) console.log("Tweets posting error"); res.status(500).send({ message: "Tweets posting error try again later" })
+        if (success) console.log("Tweets posted successfully"); res.status(200).send({ message: "Tweets posted successfully" })
+    })
+})
+
+app.get("tweets", (req, res) => {
+    tweets.find({}, (err, success) => {
+        if (err) console.log("Internal Error"); res.status(500).send({ message: "Internal Error" })
+        if (success) res.status(200).send({ message: "All Tweets", success })
     })
 })
 
