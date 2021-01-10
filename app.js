@@ -50,7 +50,7 @@ var userSchema = new mongoose.Schema({
 var users = mongoose.model("users", userSchema);
 
 var tweetsSchema = mongoose.Schema({
-    tweets: {
+    tweet: {
         type: String,
         // required: true,
         // unique: true,
@@ -60,7 +60,8 @@ var tweets = mongoose.model("tweets", tweetsSchema);
 
 
 var sessionsSchema = mongoose.Schema({
-    session: { type: String, },
+    token: { type: String, },
+    userName: { type: String, },
 })
 var sessions = mongoose.model("sessions", sessionsSchema);
 
@@ -93,7 +94,7 @@ app.post("/signup", (req, res) => {
         please provide userName, password in json body.
         e.g:
         {
-            "name": "Mark",
+            "userName": "Mark",
             "email": "abc@abc.com",
             "password": "abc",
         }`)
@@ -164,7 +165,8 @@ app.post("/login", (req, res) => {
                             }, SERVER_SECRET, { expiresIn: "1h" })
 
                         sessions.create({
-                            session: tokenData
+                            token: tokenData,
+                            userName: user.userName
                         })
 
                         res.status(200).send({
@@ -199,16 +201,62 @@ app.post("/login", (req, res) => {
     })
 })
 
+// app.post("tweets", (req, res) => {
+//     if (!req.body || !req.headers.token || !req.headers.token) {
+//         res.status(400).send(`
+//         please provide token in json body.
+//         e.g:
+//         {
+//             "token": "Mark",
+//         }`)
+//         return;
+//     }
 
+//     sessions.findOne({ })
+//     tweets.create({
+//         tweet: req.body.tweet
+//     })
+// })
+app.get("/dashboard", (req, res) => {
+    if (!req.headers.token) {
+        res.status(400).send(`
+        please provide token in headers.
+        e.g:
+        {
+            "token": "1321xdbza2c5dafg",
+        }`)
+        return;
+    }
+    sessions.findOne({ token: req.headers.token }, (err, doc) => {
+        if (doc) {
+            jwt.verify(doc.token, SERVER_SECRET, (err, decodedData) => {
+                if (decodedData.exp > new Date().getTime()) {
+                    res.status(440).send({
+                        message: "Session expired kindly login again"
+                    })
+                    return;
+                }
+                if (err) console.log("Decoded data Error:", err)
 
-// jwt.verify(tokenData, SERVER_SECRET, (err, decodedData) => {
-//     if (decodedData) console.log("Decoded data:", decodedData.exp, "Time now: ", new Date().getTime())
-//     if (err) console.log("Decoded data Error:", err)
-
-
-// });
-
-
+                res.status(200).send({
+                    message: "Welcome to profile"
+                })
+            });
+        }
+        if (!doc) {
+            res.status(400).send({
+                message: 'Token is not valid'
+            })
+            console.log("Can't find token")
+        }
+        if (err) {
+            res.status(500).send({
+                message: 'Internal Error'
+            })
+            console.log("Internal Server Error")
+        }
+    })
+})
 
 server.listen(port, () => {
     console.log(`Server is listening to port ${port}`)
