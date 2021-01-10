@@ -240,19 +240,41 @@ app.get("/dashboard", (req, res) => {
     })
 })
 
-app.post("tweet", (req, res) => {
-    if (!req.body.tweet || !req.body.userName) {
-        res.status(449).send({
-            message: "Tweet is missing"
-        })
+app.post("/tweet", (req, res) => {
+    if (!req.body.tweet || !req.headers.token) {
+        res.status(449).send(`
+            please provide token in header and tweet in headers
+            e.g:
+            {
+                "tweet": "String",
+            }`
+        )
         return;
     }
-    tweets.create({
-        userName: req.body.userName,
-        tweet: req.body.tweet
-    }, (err, success) => {
-        if (err) console.log("Tweets posting error"); res.status(500).send({ message: "Tweets posting error try again later" })
-        if (success) console.log("Tweets posted successfully"); res.status(200).send({ message: "Tweets posted successfully" })
+    sessions.findOne({ token: req.headers.token }, (err, user) => {
+        if (user) {
+            tweets.create({
+                userName: user.userName,
+                tweet: req.body.tweet
+            }, (err, success) => {
+                if (success) {
+                    console.log("Tweets posted successfully")
+                    res.status(200).send({ message: "Tweets posted successfully" })
+                }
+                else if (err) {
+                    console.log("Internal server error", err)
+                    res.status(500).send({ message: "Tweets posting error try again later" })
+                }
+            })
+        }
+        if (!user) {
+            console.log("User not find")
+            res.status(403).send({ message: "User not find" })
+        }
+        if (err) {
+            console.log("Internal error")
+            res.status(500).send({ message: "Internal error" })
+        }
     })
 })
 
