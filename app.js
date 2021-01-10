@@ -227,9 +227,9 @@ app.get("/dashboard", (req, res) => {
         }`)
         return;
     }
-    sessions.findOne({ token: req.headers.token }, (err, doc) => {
-        if (doc) {
-            jwt.verify(doc.token, SERVER_SECRET, (err, decodedData) => {
+    sessions.findOne({ token: req.headers.token }, (err, user) => {
+        if (user) {
+            jwt.verify(user.token, SERVER_SECRET, (err, decodedData) => {
                 if (decodedData.exp > new Date().getTime()) {
                     res.status(440).send({
                         message: "Session expired kindly login again"
@@ -241,9 +241,10 @@ app.get("/dashboard", (req, res) => {
                 res.status(200).send({
                     message: "Welcome to profile"
                 })
+                console.log(user.userName, "Welcome to Profile")
             });
         }
-        if (!doc) {
+        if (!user) {
             res.status(400).send({
                 message: 'Token is not valid'
             })
