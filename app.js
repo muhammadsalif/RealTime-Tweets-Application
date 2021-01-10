@@ -278,10 +278,13 @@ app.post("/tweet", (req, res) => {
     })
 })
 
-app.get("tweets", (req, res) => {
+app.get("/tweets", (req, res) => {
     tweets.find({}, (err, success) => {
-        if (err) console.log("Internal Error"); res.status(500).send({ message: "Internal Error" })
-        if (success) res.status(200).send({ message: "All Tweets", success })
+        if (success) res.status(200).send(success )
+        else if (err) {
+            console.log("Internal Error");
+            res.status(500).send({ message: "Internal Error" })
+        }
     })
 })
 
