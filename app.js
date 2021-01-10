@@ -5,6 +5,9 @@ const app = express()
 const socketIO = require('socket.io');
 const mongoose = require('mongoose');
 const bcrypt = require("bcrypt-inzi")
+const jwt = require('jsonwebtoken');
+
+const SERVER_SECRET = process.env.SECRET || "1234";
 
 
 const port = process.env.PORT || 5000;
@@ -54,6 +57,13 @@ var tweetsSchema = mongoose.Schema({
     },
 })
 var tweets = mongoose.model("tweets", tweetsSchema);
+
+
+var sessionsSchema = mongoose.Schema({
+    session: { type: String, },
+})
+var sessions = mongoose.model("sessions", sessionsSchema);
+
 
 /////////////////////////////////////////////////////////////////////////
 const server = http.createServer(app)
@@ -139,14 +149,27 @@ app.post("/login", (req, res) => {
             "password": "1234",
         }`)
     }
-
-    users.findOne({ email: req.body.email }, (err, doc) => {
-        if (doc) {
-            bcrypt.varifyHash(req.body.password, doc.password)
+    users.findOne({ email: req.body.email }, (err, user) => {
+        if (user) {
+            bcrypt.varifyHash(req.body.password, user.password)
                 .then(isMatched => {
                     if (isMatched) {
+
+                        let tokenData =
+                            jwt.sign({
+                                id: user._id,
+                                name: user.userName,
+                                email: user.email,
+                                ip: req.socket.remoteAddress
+                            }, SERVER_SECRET, { expiresIn: "1h" })
+
+                        sessions.create({
+                            session: tokenData
+                        })
+
                         res.status(200).send({
-                            message: "Login  successfully"
+                            message: "Login  successfully",
+                            token: tokenData
                         })
                         console.log(req.body.email, "Login successfully");
                     } else {
@@ -163,7 +186,7 @@ app.post("/login", (req, res) => {
                     console.log("Internal error ", e)
                 })
         }
-        if (!doc) {
+        if (!user) {
             res.status(404).send({
                 message: "Email does not exists kindly signup first"
             })
@@ -175,6 +198,15 @@ app.post("/login", (req, res) => {
         }
     })
 })
+
+
+
+// jwt.verify(tokenData, SERVER_SECRET, (err, decodedData) => {
+//     if (decodedData) console.log("Decoded data:", decodedData.exp, "Time now: ", new Date().getTime())
+//     if (err) console.log("Decoded data Error:", err)
+
+
+// });
 
 
 
