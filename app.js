@@ -131,7 +131,6 @@ app.get("/tweets", (req, res, next) => {
         })
 })
 
-
 server.listen(port, () => {
     console.log(`Server is listening to port ${port}`)
 })
