@@ -80,7 +80,7 @@ app.post("/tweet", (req, res, next) => {
         res.status(400).send(`
         Please provide complete information
         {
-            "tweet" :"abcdefghijklmnopqrstuvwxyz",
+            "tweet" :"Your tweet here",
         }
         `)
         return;
