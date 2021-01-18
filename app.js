@@ -4,12 +4,19 @@ const http = require("http");
 const cookieParser = require("cookie-parser");
 const app = express()
 var jwt = require('jsonwebtoken');
+const socketIo = require('socket.io');
 
 const authRoutes = require("./routes/authentication")
 const { port, SERVER_SECRET } = require("./cors/index")
 var { usersModel, tweetsModel } = require("./Database/models");
 
 const server = http.createServer(app)
+
+const io = socketIo(server, {
+    cors: {
+        origin: "*"
+    },
+});
 
 app.use(bodyParser.json());
 app.use(cookieParser())
@@ -52,6 +59,17 @@ app.use((req, res, next) => {
     });
 })
 
+io.on('connection', (socket) => {
+    console.log("User is connected with id :", socket.id)
+    // setInterval(() => {
+    //     socket.emit("NOTIFICATION", "Some Data")
+    // }, 1000);
+
+    socket.on("disconnect", (reason) => {
+        console.log("User is disconnected ", reason)
+    })
+});
+
 app.get("/profile", (req, res, next) => {
     console.log("user specific data", req.body.jToken)
     usersModel.findById(req.body.jToken.id, 'userName email',
@@ -88,12 +106,12 @@ app.post("/tweet", (req, res, next) => {
     tweetsModel.create({
         userName: req.body.jToken.userName,
         tweet: req.body.tweet
-    }).then(() => {
+    }).then((doc) => {
         res.send({
-            message: "Tweet posted success"
+            message: "Tweet posted success",
         })
         console.log("Tweet posted success")
-        console.log("Tweet posted success")
+        io.emit("NEW_TWEET", doc)
     }).catch(() => {
         res.status(500).send({
             message: "Internal server error"
