@@ -76,7 +76,7 @@ app.get("/profile", (req, res, next) => {
 
 app.post("/tweet", (req, res, next) => {
     console.log("data", req.body.jToken)
-    if (!req.body || !req.body.tweet ) {
+    if (!req.body || !req.body.tweet) {
         res.status(400).send(`
         Please provide complete information
         {
@@ -100,6 +100,17 @@ app.post("/tweet", (req, res, next) => {
         })
         console.log("Internal server error")
     })
+})
+
+app.get("/tweets", (req, res, next) => {
+    tweetsModel.find({}).limit(100)
+        .then((doc) => {
+            res.send(doc)
+        }).catch(() => {
+            res.status(500).send({
+                message: "Internal server error"
+            })
+        })
 })
 
 
